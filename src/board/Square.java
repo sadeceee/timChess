@@ -11,8 +11,6 @@ public class Square {
     private Figure figure;
     private int x;
     private int y;
-    private boolean protectedByWhite;
-    private boolean protectedByBlack;
 
     public Square(int x, int y) {
         this.x = x;
@@ -23,10 +21,6 @@ public class Square {
         for (Figure f : figures)
             if (f.canMove(board, x, y)) return f;
         return null;
-    }
-
-    public boolean checkMatt() {
-        return false;
     }
 
     public boolean isAllocated() {
@@ -61,21 +55,5 @@ public class Square {
 
     public void setY(int y) {
         this.y = y;
-    }
-
-    public boolean isProtectedByWhite() {
-        return protectedByWhite;
-    }
-
-    public void setProtectedByWhite(boolean protectedByWhite) {
-        this.protectedByWhite = protectedByWhite;
-    }
-
-    public boolean isProtectedByBlack() {
-        return protectedByBlack;
-    }
-
-    public void setProtectedByBlack(boolean protectedByBlack) {
-        this.protectedByBlack = protectedByBlack;
     }
 }

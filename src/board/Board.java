@@ -91,6 +91,10 @@ public class Board extends Canvas {
         reDraw(g2);
     }
 
+    /**
+     * Repaint the canvas, Redraw background, figures
+     * @param g the canvas
+     */
     public void reDraw(Graphics g) {
         g.drawImage(background, 0, 0, null);
 
@@ -112,7 +116,7 @@ public class Board extends Canvas {
         }
     }
 
-    public void buildBoard() {
+    private void buildBoard() {
         int y = 0;
         for (String s : position) {
             int x = 0;
@@ -142,6 +146,11 @@ public class Board extends Canvas {
         }
     }
 
+    /**
+     * Move figure with valid notation
+     * @param notation Notation can be "e2e4" or "o-o"
+     * @throws Exception Notification message
+     */
     public void performMove(String notation) throws Exception {
         if (Pattern.matches(notationPattern, notation)) {
             notation = notation.toLowerCase();
@@ -151,7 +160,7 @@ public class Board extends Canvas {
             performCastling(notation);
             resetEnPassat();
         } else {
-            throw new Exception("invalid input");
+            throw new Exception("Invalid input");
         }
     }
 
@@ -174,7 +183,7 @@ public class Board extends Canvas {
             setEnPassat(current, notation);
             board[y][x].removeFigure();
         } else {
-            throw new Exception("illegal move");
+            throw new Exception("Illegal move");
         }
     }
 
@@ -182,10 +191,18 @@ public class Board extends Canvas {
         return (current.getTurnIntoQueen()) ? figureFactory.getFigure((current.isWhite()) ? 'Q' : 'q', current.getX(), current.getY()) : current;
     }
 
+    /**
+     * Test if king is in check
+     * @throws Exception Notification message: Check!
+     */
     public void kingIsInCheck() throws Exception {
-        if (whiteIsInCheck() || blackIsInCheck()) throw new Exception("check") ;
+        if (whiteIsInCheck() || blackIsInCheck()) throw new Exception("Check!") ;
     }
 
+    /**
+     * Test if king is check-mate
+     * @throws Exception Notification message: Checkmate!
+     */
     public void kingIsCheckMate() throws Exception {
         if (whiteIsInCheck()) {
             int kx = king_w.getX();
@@ -197,46 +214,8 @@ public class Board extends Canvas {
                             if (!whiteIsStillInCheck(king_w, kx, ky, x, y)) return;
                         }
                     } catch (ArrayIndexOutOfBoundsException e) { }
-            Figure f = board[ky][kx].check(figures_b, board);
-            int fx = f.getX();
-            int fy = f.getY();
-            if (fx<kx) {
-                if (fy<ky) {
-                    int y=fy;
-                    for (int x=fx; x<kx; x++)
-                         if (board[y++][x].check(figures_w, board)!=null) return;
-                } else if (fy==ky) {
-                    for (int x=fx; x<ky; x++)
-                        if (board[fy][x].check(figures_w, board)!=null) return;
-                } else if (fy>ky) {
-                    int y=fy;
-                    for (int x=fx; x<kx; x++)
-                        if (board[y--][x].check(figures_w, board)!=null) return;
-                }
-            }
-            else if (fx==kx) {
-                if (fy<ky) {
-                    for (int y=fy; y<ky; y++)
-                        if (board[y][fx].check(figures_w, board)!=null) return;
-                } else if (fy>ky) {
-                    for (int y=fy; y<ky; y--)
-                        if (board[y][fx].check(figures_w, board)!=null) return;
-                }
-            }
-            else if (fx>kx) {
-                if (fy<ky) {
-                    int y=fy;
-                    for (int x=fx; x<kx; x--)
-                        if (board[y++][x].check(figures_w, board)!=null) return;
-                } else if (fy==ky) {
-                    for (int x=fx; x<ky; x--)
-                        if (board[fy][x].check(figures_w, board)!=null) return;
-                } else if (fy>ky) {
-                    int y=fy;
-                    for (int x=fx; x<kx; x--)
-                        if (board[y--][x].check(figures_w, board)!=null) return;
-                }
-            }
+            Figure enemy = board[ky][kx].check(figures_b, board);
+            testIfKingCanBeSaved(figures_w, kx, ky, enemy.getX(), enemy.getY());
             throw new Exception("Checkmate!");
         } else if (blackIsInCheck()) {
             int kx = king_b.getX();
@@ -248,9 +227,51 @@ public class Board extends Canvas {
                             if (!blackIsStillInCheck(king_b, kx, ky, x, y)) return;
                         }
                     } catch (ArrayIndexOutOfBoundsException e) { }
+            Figure enemy = board[ky][kx].check(figures_w, board);
+            testIfKingCanBeSaved(figures_b, kx, ky, enemy.getX(), enemy.getY());
             throw new Exception("Checkmate!");
         }
 
+    }
+
+    private void testIfKingCanBeSaved(List<Figure> f, int king_x, int king_y, int enemy_x, int enemy_y) {
+        if (enemy_x < king_x) {
+            if (enemy_y < king_y) {
+                int y= enemy_y;
+                for (int x= enemy_x; x< king_x; x++)
+                    if (board[y++][x].check(f, board)!=null) return;
+            } else if (enemy_y == king_y) {
+                for (int x= enemy_x; x< king_y; x++)
+                    if (board[enemy_y][x].check(f, board)!=null) return;
+            } else if (enemy_y > king_y) {
+                int y= enemy_y;
+                for (int x= enemy_x; x< king_x; x++)
+                    if (board[y--][x].check(f, board)!=null) return;
+            }
+        }
+        else if (enemy_x == king_x) {
+            if (enemy_y < king_y) {
+                for (int y= enemy_y; y< king_y; y++)
+                    if (board[y][enemy_x].check(f, board)!=null) return;
+            } else if (enemy_y > king_y) {
+                for (int y= enemy_y; y< king_y; y--)
+                    if (board[y][enemy_x].check(f, board)!=null) return;
+            }
+        }
+        else if (enemy_x > king_x) {
+            if (enemy_y < king_y) {
+                int y= enemy_y;
+                for (int x= enemy_x; x< king_x; x--)
+                    if (board[y++][x].check(f, board)!=null) return;
+            } else if (enemy_y == king_y) {
+                for (int x= enemy_x; x< king_y; x--)
+                    if (board[enemy_y][x].check(f, board)!=null) return;
+            } else if (enemy_y > king_y) {
+                int y= enemy_y;
+                for (int x= enemy_x; x< king_x; x--)
+                    if (board[y--][x].check(f, board)!=null) return;
+            }
+        }
     }
 
     private boolean whiteIsInCheck() {

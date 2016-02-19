@@ -25,11 +25,15 @@ public class Game implements ActionListener {
         Game chess = new Game();
     }
 
+    /**
+     * Constructor building the frame
+     */
     public Game() {
         window = new JFrame("TimChess");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setSize(400, 320);
         window.setLayout(new GridLayout(1, 2));
+
         board = new Board(newGame);
         window.add(board);
         panel = new JPanel(new BorderLayout(2, 2));
@@ -74,7 +78,6 @@ public class Game implements ActionListener {
 
             input.setText("");
             board.reDraw(board.getGraphics());
-
         }
     }
 }
