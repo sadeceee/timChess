@@ -4,13 +4,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Created by tim on 09.02.16.
  */
 public class Game implements ActionListener {
     // rnb1qknr/Pppp1ppp/8/2P5/8/2BP6/PPP2PPP/RN5K b KQkq - 0 1
+    // r2qk2r/Pppp1ppp/8/2P5/8/2PP6/PPP2PPP/R2QK2R b KQkq - 0 1
     private JFrame window;
     private JPanel panel;
     private JMenuBar menuBar;
@@ -27,9 +35,7 @@ public class Game implements ActionListener {
     private JTextField input;
     private JButton button;
     private JLabel message;
-    private int halfMoves = 0;
-    private int fullMoves = 0;
-    private int totalMoves = 0;
+    private int count = 0;
 
     public static void main(String[] args) {
         Game chess = new Game();
@@ -59,7 +65,9 @@ public class Game implements ActionListener {
         file.add(getFen);
         getFen.addActionListener(this);
         file.add(save);
+        save.addActionListener(this);
         file.add(load);
+        load.addActionListener(this);
         file.add(exit);
         exit.addActionListener(this);
         JMenu edit = new JMenu("Edit");
@@ -81,7 +89,7 @@ public class Game implements ActionListener {
 
         JPanel notationPanel = new JPanel();
         notationPanel.setLayout(new BorderLayout(2, 1));
-        input = new JTextField(10);
+        input = new JTextField(23);
         button = new JButton("GO");
         button.addActionListener(this);
         message = new JLabel("Sample input");
@@ -93,7 +101,7 @@ public class Game implements ActionListener {
         contentPanel.add(notationPanel, BorderLayout.SOUTH);
         panel.add(contentPanel, BorderLayout.SOUTH);
 
-
+        window.setResizable(false);
         window.add(panel);
         window.pack();
         window.setVisible(true);
@@ -106,7 +114,12 @@ public class Game implements ActionListener {
                 message.setVisible(false);
                 board.performMove(input.getText());
                 board.activePlayer = (board.activePlayer.equals("w")) ? "b" : "w";
-                notation.setText(notation.getText() + ((board.half<board.full)? ++board.half : board.full++) + ". " + input.getText() + "  \n");
+                notation.setText(notation.getText() + ((board.half<board.full)? ++board.half : board.full++) + ". " + input.getText() + "  ");
+                if (count == 4) {
+                    notation.setText(notation.getText() + "\n");
+                    count = 0;
+                }
+                else count++;
                 board.kingIsCheckMate();
                 board.kingIsInCheck();
             } catch (Exception ex) {
@@ -125,15 +138,85 @@ public class Game implements ActionListener {
             board.reDraw(board.getGraphics());
         }
         else if (e.getSource().equals(startWithFen)) {
-            board.newGame("r2qk2r/Pppp1ppp/8/2P5/8/2PP6/PPP2PPP/R2QK2R b KQkq - 0 1");
-            board.reDraw(board.getGraphics());
+            FenFrame fenFrame = new FenFrame(board);
         }
         else if (e.getSource().equals(getFen)) {
-            message.setText(board.getFen());
-            message.setVisible(true);
+            GetFenFrame getFenFrame = new GetFenFrame(board.getFen());
+        }
+        else if (e.getSource().equals(save)) {
+            try {
+                Files.write(Paths.get("src/save.txt"), Arrays.asList(board.getFen()), Charset.forName("UTF-8"));
+            } catch (IOException ex) {
+                message.setText("File not found");
+                message.setVisible(true);
+            }
+        }
+        else if (e.getSource().equals(load)) {
+            try {
+                List<String> s = Files.readAllLines(Paths.get("src/save.txt"));
+                board.newGame(s.get(0));
+                board.reDraw(board.getGraphics());
+            } catch (IOException ex) {
+                message.setText("File not found");
+                message.setVisible(true);
+            }
         }
         else if (e.getSource().equals(exit)) {
             System.exit(0);
         }
     }
+}
+
+class FenFrame extends JFrame implements ActionListener {
+
+    private JButton cancel;
+    private JButton ok;
+    private Board board;
+    private String fen = "r2qk2r/Pppp1ppp/8/8/8/8/PPP1pPPP/R1pQK1pR b KQkq - 0 1";
+    private JTextField customFen;
+    private String fenPattern = "([PRNBKQprnbkq]|[12345678])+([//]([PRNBKQprnbkq]|[12345678])+){7}[ ][bw][ ](K[Q]{0,1}[k]{0,1}[q]{0,1}|Q[k]{0,1}[q]{0,1}|k[q]{0,1}|q|[-])[ ]([abcdefgh][36]|[-])[ ][12345]{0,1}[0123456789][ ][12345]{0,1}[0123456789]";
+
+    public FenFrame(Board board) {
+        this.board = board;
+        setTitle("New Game");
+        JPanel fenPanel = new JPanel(new BorderLayout(2, 1));
+        customFen = new JTextField(20);
+        cancel = new JButton("Canel");
+        cancel.addActionListener(this);
+        ok = new JButton("ok");
+        ok.addActionListener(this);
+        fenPanel.add(customFen, BorderLayout.NORTH);
+        fenPanel.add(cancel, BorderLayout.WEST);
+        fenPanel.add(ok, BorderLayout.EAST);
+
+        add(fenPanel);
+        pack();
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource().equals(ok)) {
+            if (Pattern.matches(fenPattern, customFen.getText())) {
+                fen = customFen.getText();
+                board.newGame(fen);
+                board.reDraw(board.getGraphics());
+                setVisible(false);
+            }
+        } else if (e.getSource().equals(cancel)) {
+            setVisible(false);
+        }
+    }
+}
+
+class GetFenFrame extends JFrame {
+
+    public GetFenFrame(String fen) {
+        setTitle("Forsyth-Edwards-Notation");
+        JLabel l = new JLabel(fen);
+        add(l);
+        pack();
+        setVisible(true);
+    }
+
 }
