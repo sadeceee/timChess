@@ -76,7 +76,6 @@ public class Board extends Canvas {
 
     /**
      * Get FEN-notation of actual board
-     * TODO update fen
      * @return actual FEN-notation
      */
     public String getFen() {

@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -84,7 +83,7 @@ public class Game implements ActionListener {
         notation = new JTextArea(17, 20);
         notation.setEditable(false);
         panel.add(menuBar, BorderLayout.NORTH);
-        JPanel contentPanel = new JPanel(new BorderLayout(2, 1));
+        JPanel contentPanel = new JPanel(new BorderLayout(3, 1));
         contentPanel.add(notation, BorderLayout.NORTH);
 
         JPanel notationPanel = new JPanel();
@@ -95,9 +94,8 @@ public class Game implements ActionListener {
         message = new JLabel("Sample input");
         message.setForeground(Color.red);
         message.setVisible(false);
-        notationPanel.add(message, BorderLayout.NORTH);
-        notationPanel.add(button, BorderLayout.EAST);
-        notationPanel.add(input, BorderLayout.WEST);
+        contentPanel.add(message, BorderLayout.CENTER);
+        notationPanel.add(input, BorderLayout.WEST); notationPanel.add(button, BorderLayout.EAST);
         contentPanel.add(notationPanel, BorderLayout.SOUTH);
         panel.add(contentPanel, BorderLayout.SOUTH);
 
