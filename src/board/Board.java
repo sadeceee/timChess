@@ -34,8 +34,8 @@ public class Board extends Canvas {
     private String castling;
     private String enPassant;
     private Square resetEnPassat;
-    private String half;
-    private String full;
+    public int half;
+    public int full;
     // input patterns
     private String castlingPattern = "([0Oo])([-]\\1){1,2}";
     private String notationPattern = "[a-hA-H][1-8][a-hA-H][1-8]";
@@ -50,6 +50,10 @@ public class Board extends Canvas {
         newGame(fen);
     }
 
+    /**
+     * Creates a new Game with fen
+     * @param fen Notation within the board starts
+     */
     public void newGame(String fen) {
         figures_b = new ArrayList<Figure>();
         figures_w = new ArrayList<Figure>();
@@ -66,8 +70,8 @@ public class Board extends Canvas {
         activePlayer = this.fen[1];
         castling = this.fen[2];
         enPassant = this.fen[3];
-        half = this.fen[4];
-        full = this.fen[5];
+        half = Integer.parseInt(this.fen[4]);
+        full = Integer.parseInt(this.fen[5]);
     }
 
     /**
@@ -76,12 +80,27 @@ public class Board extends Canvas {
      * @return actual FEN-notation
      */
     public String getFen() {
-        String f = "";
-        for (String s : position)
-            f += s + "/";
-        f += " " + activePlayer + " " + castling + " " + enPassant + " " + half + " " + full;
-        fen = f.split(" ");
-        return f;
+        String temp = "";
+        if (castling.hashCode()==0) castling = "-";
+        temp += updateFen() + " " + activePlayer + " " + castling + " " + enPassant + " " + half + " " + full;
+        initFen(temp);
+        return temp;
+    }
+
+    private String updateFen() {
+        String temp = "";
+        for (int y=0; y<board.length; y++) {
+            for (int x=0, i=1; x < board[y].length; i=1) {
+                if (board[y][x].isAllocated()) {
+                    temp += figureFactory.getFigureType(board[y][x++].getFigure());
+                } else {
+                    while (x++ < board[y].length-1 && !board[y][x].isAllocated()) i++;
+                    temp += i;
+                }
+            }
+            temp += "/";
+        }
+        return temp;
     }
 
     private void initBackground() {
@@ -184,7 +203,7 @@ public class Board extends Canvas {
         if (current.canMove(board, destX, destY) && ((current.isWhite())? (!whiteIsStillInCheck(current, x, y, destX, destY)) : (!blackIsStillInCheck(current, x, y, destX, destY)))) {
             removeFigureInList(destX, destY);
             board[destY][destX].setFigure(refreshFigure(current));
-            current.moved();
+            updateCastlingFen(current);
             resetEnPassat();
             setEnPassat(current, notation);
             board[y][x].removeFigure();
@@ -195,6 +214,21 @@ public class Board extends Canvas {
 
     private Figure refreshFigure(Figure current) {
         return (current.getTurnIntoQueen()) ? figureFactory.getFigure((current.isWhite()) ? 'Q' : 'q', current.getX(), current.getY()) : current;
+    }
+
+    private void updateCastlingFen(Figure current) {
+        current.moved();
+        String temp_f = figureFactory.getFigureType(current);
+        if (temp_f.equals("K")) {
+            castling = castling.replace("K", "");
+            castling = castling.replace("Q", "");
+        }
+        else if (temp_f.equals("k")) {
+            castling = castling.replace("k", "");
+            castling = castling.replace("q", "");
+        }
+        else if (temp_f.equals("R")) castling = castling.replace((current.getX()<king_w.getX()) ? "Q" : "K", "");
+        else if (temp_f.equals("r")) castling = castling.replace((current.getX()<king_b.getX()) ? "q" : "k", "");
     }
 
     /**
@@ -344,12 +378,16 @@ public class Board extends Canvas {
                 if (activePlayer.equals("w")) {
                     board[7][6].setFigure(king_w);
                     king_w.moved();
+                    castling = castling.replace('K', '\u0000');
+                    castling = castling.replace('Q', '\u0000');
                     board[7][5].setFigure(board[7][7].getFigure());
                     board[7][7].removeFigure();
                     board[7][4].removeFigure();
                 } else {
                     board[0][6].setFigure(king_b);
                     king_b.moved();
+                    castling = castling.replace('k', '\u0000');
+                    castling = castling.replace('q', '\u0000');
                     board[0][5].setFigure(board[0][7].getFigure());
                     board[0][7].removeFigure();
                     board[0][4].removeFigure();
@@ -368,12 +406,16 @@ public class Board extends Canvas {
                 if (activePlayer.equals("w")) {
                     board[7][2].setFigure(king_w);
                     king_w.moved();
+                    castling = castling.replace('K', '\u0000');
+                    castling = castling.replace('Q', '\u0000');
                     board[7][3].setFigure(board[7][0].getFigure());
                     board[7][0].removeFigure();
                     board[7][4].removeFigure();
                 } else {
                     board[0][2].setFigure(king_b);
                     king_b.moved();
+                    castling = castling.replace('k', '\u0000');
+                    castling = castling.replace('q', '\u0000');
                     board[0][3].setFigure(board[0][0].getFigure());
                     board[0][0].removeFigure();
                     board[0][4].removeFigure();

@@ -47,4 +47,26 @@ public class FigureFactory {
 
         return null;
     }
+
+    public String getFigureType(Figure figure) {
+        if (figure.getClass().getSimpleName().equals("King")) {
+            return (figure.isWhite())? "K" : "k";
+        }
+        else if (figure.getClass().getSimpleName().equals("Queen")) {
+            return (figure.isWhite())? "Q" : "q";
+        }
+        else if (figure.getClass().getSimpleName().equals("Knight")) {
+            return (figure.isWhite())? "N" : "n";
+        }
+        else if (figure.getClass().getSimpleName().equals("Bishop")) {
+            return (figure.isWhite())? "B" : "b";
+        }
+        else if (figure.getClass().getSimpleName().equals("Rook")) {
+            return (figure.isWhite())? "R" : "r";
+        }
+        else if (figure.getClass().getSimpleName().equals("Pawn")) {
+            return (figure.isWhite())? "P" : "p";
+        }
+        return "";
+    }
 }
