@@ -13,6 +13,13 @@ public class Game implements ActionListener {
     // rnb1qknr/Pppp1ppp/8/2P5/8/2BP6/PPP2PPP/RN5K b KQkq - 0 1
     private JFrame window;
     private JPanel panel;
+    private JMenuBar menuBar;
+    private JMenuItem game;
+    private JMenuItem startWithFen;
+    private JMenuItem save;
+    private JMenuItem load;
+    private JMenuItem exit;
+
     private Board board;
     private final String newGame = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     private JLabel notation;
@@ -34,6 +41,29 @@ public class Game implements ActionListener {
         window.setSize(400, 320);
         window.setLayout(new GridLayout(1, 2));
 
+        menuBar = new JMenuBar();
+        JMenu file = new JMenu("File");
+        game = new JMenuItem("New Game");
+        startWithFen = new JMenuItem("Start with custom FEN");
+        save = new JMenuItem("Save Game");
+        load = new JMenuItem("Load Game");
+        exit = new JMenuItem("Exit Game");
+        file.add(game);
+        game.addActionListener(this);
+        file.add(startWithFen);
+        startWithFen.addActionListener(this);
+        file.add(save);
+        file.add(load);
+        file.add(exit);
+        exit.addActionListener(this);
+        JMenu edit = new JMenu("Edit");
+        JMenuItem undo = new JMenuItem("Undo");
+        JMenuItem surrender = new JMenuItem("Surrender");
+        edit.add(undo);
+        edit.add(surrender);
+        menuBar.add(file);
+        menuBar.add(edit);
+
         board = new Board(newGame);
         window.add(board);
         panel = new JPanel(new BorderLayout(2, 2));
@@ -52,6 +82,7 @@ public class Game implements ActionListener {
         notationPanel.add(button, BorderLayout.EAST);
         notationPanel.add(input, BorderLayout.WEST);
         panel.add(notationPanel, BorderLayout.SOUTH);
+        panel.add(menuBar, BorderLayout.NORTH);
 
         window.add(panel);
         window.pack();
@@ -78,6 +109,17 @@ public class Game implements ActionListener {
 
             input.setText("");
             board.reDraw(board.getGraphics());
+        }
+        else if (e.getSource().equals(game)) {
+            board.newGame(newGame);
+            board.reDraw(board.getGraphics());
+        }
+        else if (e.getSource().equals(startWithFen)) {
+            board.newGame("rnb1qknr/Pppp1ppp/8/2P5/8/2PP6/PPP2PPP/RN5K b KQkq - 0 1");
+            board.reDraw(board.getGraphics());
+        }
+        else if (e.getSource().equals(exit)) {
+            System.exit(0);
         }
     }
 }
